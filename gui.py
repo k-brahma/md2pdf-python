@@ -3,17 +3,29 @@
 Markdown to PDF converter GUI interface
 """
 
-import sys
-import os
 import logging
+import sys
 from pathlib import Path
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,   
-    QPushButton, QLabel, QLineEdit, QFileDialog, QCheckBox,
-    QSpinBox, QMessageBox, QProgressBar, QTextEdit
-)
+
 from PySide6.QtCore import Qt, QThread, Signal
-from core import create_driver, process_file, process_directory
+from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSpinBox,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+
+from core import create_driver, process_directory, process_file
 
 # ロガーの設定
 logger = logging.getLogger(__name__)
@@ -55,10 +67,19 @@ class ConversionWorker(QThread):
         self.driver = None
     
     def run(self):
+        error_occurred = False
+        error_message = ""
+        
         try:
             logger.info(f"変換処理を開始: 入力={self.input_path}, 出力={self.output_path}")
-            self.driver = create_driver(False)  # GUIモードではヘッドレスを無効化
+            logger.debug(f"設定: css_files={self.css_files}, compact={self.compact}, font_size={self.font_size}")
             
+            # WebDriver作成
+            logger.debug("WebDriver作成開始")
+            self.driver = create_driver(False)
+            logger.debug("WebDriver作成完了")
+            
+            success = False
             if self.selected_files:
                 logger.info(f"選択されたファイルを処理: {self.selected_files}")
                 success = process_directory(
@@ -89,20 +110,39 @@ class ConversionWorker(QThread):
                     font_size=self.font_size
                 )
             
+            logger.debug(f"変換処理結果: success={success}")
+            
             if success:
                 logger.info("変換処理が正常に完了しました")
                 self.finished.emit(True, "")
             else:
-                error_msg = "変換処理が失敗しました"
-                logger.error(error_msg)
-                self.finished.emit(False, error_msg)
+                error_message = "変換処理が失敗しました（詳細は上記のログを確認してください）"
+                logger.error(error_message)
+                error_occurred = True
+                
         except Exception as e:
-            error_msg = f"変換処理中にエラーが発生しました: {str(e)}"
-            logger.exception(error_msg)
-            self.finished.emit(False, error_msg)
+            import traceback
+            error_message = f"変換処理中に予期せぬエラーが発生しました:\n\nエラー: {str(e)}\n\nスタックトレース:\n{traceback.format_exc()}"
+            logger.error(error_message)
+            error_occurred = True
+            
         finally:
+            # WebDriverのクリーンアップ
             if self.driver:
-                self.driver.quit()
+                try:
+                    logger.debug("WebDriver終了開始")
+                    self.driver.quit()
+                    logger.debug("WebDriver終了完了")
+                except Exception as e:
+                    cleanup_error = f"WebDriverの終了中にエラーが発生しました: {str(e)}"
+                    logger.error(cleanup_error, exc_info=True)
+                    if not error_occurred:
+                        error_message = cleanup_error
+                        error_occurred = True
+            
+            # 結果をシグナルで送信
+            if error_occurred:
+                self.finished.emit(False, error_message)
 
 
 class MainWindow(QMainWindow):
@@ -298,9 +338,10 @@ class MainWindow(QMainWindow):
             self.log_area.append("変換が完了しました")
             QMessageBox.information(self, "完了", "変換が正常に完了しました")
         else:
+            error_text = f"変換に失敗しました\n\n{error_message}" if error_message else "変換に失敗しました"
             self.status_label.setText("変換に失敗しました")
-            self.log_area.append(f"エラー: {error_message}")
-            QMessageBox.critical(self, "エラー", error_message)
+            self.log_area.append(error_text)
+            QMessageBox.critical(self, "エラー", error_text)
 
     def toggle_merge_name(self, state):
         """マージオプションの有効/無効に応じてファイル名入力フィールドを切り替え"""

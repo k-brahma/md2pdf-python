@@ -4,10 +4,11 @@ Markdown to PDF converter CLI interface
 """
 
 import argparse
-import sys
 import logging
+import sys
 from pathlib import Path
-from core import create_driver, process_file, process_directory
+
+from core import create_driver, process_directory, process_file
 
 # ロガーの設定
 logger = logging.getLogger(__name__)
@@ -82,11 +83,16 @@ def main():
             )
             
             if not success:
+                logger.error("変換処理が失敗しました", exc_info=True)
                 sys.exit(1)
         else:
             # 単一ファイルの処理
             if not output_path.parent.exists():
-                output_path.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                except Exception as e:
+                    logger.error(f"出力ディレクトリの作成に失敗しました: {str(e)}", exc_info=True)
+                    sys.exit(1)
             
             success = process_file(
                 input_path, output_path, driver,
@@ -98,15 +104,18 @@ def main():
             if success:
                 logger.info("✓ Conversion completed successfully!")
             else:
-                logger.error("✗ Conversion failed!")
+                logger.error("✗ Conversion failed!", exc_info=True)
                 sys.exit(1)
             
     except Exception as e:
-        logger.exception(f"Error: {e}")
+        logger.exception(f"予期せぬエラーが発生しました: {str(e)}")
         sys.exit(1)
     finally:
         if driver:
-            driver.quit()
+            try:
+                driver.quit()
+            except Exception as e:
+                logger.error(f"WebDriverの終了中にエラーが発生しました: {str(e)}", exc_info=True)
 
 
 if __name__ == '__main__':

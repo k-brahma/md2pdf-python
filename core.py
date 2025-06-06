@@ -3,33 +3,48 @@
 Markdown to PDF converter core functionality
 """
 
-import os
-import tempfile
 import base64
 import logging
+import os
+import tempfile
+from io import BytesIO
 from pathlib import Path
+
+import markdown
+from jinja2 import Template
+from markdown.extensions import codehilite, fenced_code, tables, toc
+from PyPDF2 import PdfMerger, PdfReader, PdfWriter
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import markdown
-from markdown.extensions import toc, tables, fenced_code, codehilite
-from jinja2 import Template
+
 from config.config import (
-    MARKDOWN_EXTENSIONS,
     CODEHILITE_CONFIG,
     DEFAULT_CSS,
     DEFAULT_HTML_TEMPLATE,
+    MARKDOWN_EXTENSIONS,
+    PDF_CONFIG,
     load_css_file,
-    PDF_CONFIG
 )
-from PyPDF2 import PdfMerger
-from PyPDF2 import PdfReader, PdfWriter
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from io import BytesIO
 
 # ロガーの設定
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# ファイルハンドラの設定（gui.pyと同じファイルに出力）
+log_file = Path('pdf_converter.log')
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_handler.setLevel(logging.DEBUG)
+
+# フォーマッタの設定
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# ハンドラの追加（重複を避けるために既存のハンドラを確認）
+if not logger.handlers:
+    logger.addHandler(file_handler)
 
 def load_template_file(file_path):
     """テンプレートファイルを読み込む"""
@@ -150,20 +165,35 @@ def create_driver(headless=True):
 
 def html_to_pdf(driver, html_content, pdf_path):
     """HTMLをPDFに変換"""
+    logger.debug(f"html_to_pdf開始: pdf_path={pdf_path}")
+    
     try:
         # 一時HTMLファイルを作成
+        logger.debug("一時HTMLファイル作成開始")
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html_content)
             temp_html_path = f.name
+        logger.debug(f"一時HTMLファイル作成完了: {temp_html_path}")
         
         # HTMLを読み込み
         file_url = f"file://{os.path.abspath(temp_html_path)}"
-        logger.debug(f"Loading HTML: {file_url}")
+        logger.debug(f"HTMLファイル読み込み開始: {file_url}")
         
-        driver.get(file_url)
+        try:
+            driver.get(file_url)
+            logger.debug("HTMLファイル読み込み完了")
+        except Exception as e:
+            logger.error(f"HTMLファイル読み込みエラー: {str(e)}", exc_info=True)
+            return False
         
         # ページの読み込み完了を待つ
-        driver.implicitly_wait(3)
+        try:
+            logger.debug("ページ読み込み待機開始")
+            driver.implicitly_wait(3)
+            logger.debug("ページ読み込み待機完了")
+        except Exception as e:
+            logger.error(f"ページ読み込み待機エラー: {str(e)}", exc_info=True)
+            return False
         
         # PDF生成オプション（フッターなし）
         pdf_options = {
@@ -178,23 +208,42 @@ def html_to_pdf(driver, html_content, pdf_path):
             'marginLeft': 0.2,
             'marginRight': 0.2,
         }
+        logger.debug(f"PDF生成オプション: {pdf_options}")
         
-        result = driver.execute_cdp_cmd('Page.printToPDF', pdf_options)
-        pdf_data = base64.b64decode(result['data'])
+        try:
+            logger.debug("PDF生成開始（execute_cdp_cmd）")
+            result = driver.execute_cdp_cmd('Page.printToPDF', pdf_options)
+            logger.debug(f"PDF生成完了: データサイズ={len(result.get('data', ''))} bytes")
+            pdf_data = base64.b64decode(result['data'])
+            logger.debug(f"base64デコード完了: {len(pdf_data)} bytes")
+        except Exception as e:
+            logger.error(f"PDF生成エラー: {str(e)}", exc_info=True)
+            return False
         
-        with open(pdf_path, 'wb') as f:
-            f.write(pdf_data)
+        try:
+            logger.debug(f"PDFファイル書き込み開始: {pdf_path}")
+            with open(pdf_path, 'wb') as f:
+                f.write(pdf_data)
+            logger.debug("PDFファイル書き込み完了")
+        except Exception as e:
+            logger.error(f"PDFファイル書き込みエラー: {str(e)}", exc_info=True)
+            return False
             
         logger.info(f"PDF saved: {pdf_path}")
         return True
         
     except Exception as e:
-        logger.error(f"Error converting HTML to PDF: {e}")
+        logger.error(f"html_to_pdf で予期せぬエラー: {str(e)}", exc_info=True)
         return False
     finally:
         # 一時ファイルを削除
         if 'temp_html_path' in locals():
-            os.unlink(temp_html_path)
+            try:
+                logger.debug(f"一時ファイル削除: {temp_html_path}")
+                os.unlink(temp_html_path)
+                logger.debug("一時ファイル削除完了")
+            except Exception as e:
+                logger.warning(f"一時ファイル削除エラー: {str(e)}", exc_info=True)
 
 def add_footer_to_pdf(input_pdf_path, output_pdf_path, footer_text=None, start_page_number=1):
     """PDFにフッターとページ番号を追加"""
@@ -249,18 +298,69 @@ def process_file(input_path, output_path, driver, css_files=None, compact=False,
     """個別のファイルを処理する関数"""
     logger.info(f"Converting: {input_path} -> {output_path}")
     
+    # ファイル存在確認
+    if not input_path.exists():
+        error_msg = f"入力ファイルが存在しません: {input_path}"
+        logger.error(error_msg)
+        return False
+    
+    # 出力パスの処理
+    output_path = Path(output_path)
+    
+    # 出力パスに拡張子がない場合、ディレクトリとして扱い、入力ファイル名を基に.pdf拡張子のファイル名を作成
+    if not output_path.suffix:
+        pdf_filename = input_path.stem + '.pdf'
+        output_path = output_path / pdf_filename
+    
+    logger.debug(f"最終的な出力パス: {output_path}")
+    
+    # ファイル読み込み
+    logger.debug(f"ファイル読み込み開始: {input_path}")
     try:
         with open(input_path, 'r', encoding='utf-8') as f:
             md_content = f.read()
+        logger.debug(f"ファイル読み込み完了: {len(md_content)} 文字")
     except Exception as e:
-        logger.error(f"Error reading file {input_path}: {e}")
+        error_msg = f"ファイル読み込みエラー: {input_path} - {str(e)}"
+        logger.error(error_msg, exc_info=True)
         return False
     
-    html_content = markdown_to_html(md_content, css_files=css_files, 
-                                   compact=compact, font_size=font_size)
+    # Markdown -> HTML 変換
+    logger.debug("Markdown -> HTML 変換開始")
+    try:
+        html_content = markdown_to_html(md_content, css_files=css_files, 
+                                      compact=compact, font_size=font_size)
+        logger.debug(f"HTML変換完了: {len(html_content)} 文字")
+    except Exception as e:
+        error_msg = f"Markdown -> HTML 変換エラー: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return False
     
-    # 単一ファイルの場合は直接PDFを生成（フッターなし）
-    return html_to_pdf(driver, html_content, str(output_path))
+    # 出力ディレクトリ作成
+    if not output_path.parent.exists():
+        logger.debug(f"出力ディレクトリ作成: {output_path.parent}")
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            error_msg = f"出力ディレクトリ作成エラー: {output_path.parent} - {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            return False
+    
+    # PDF生成
+    logger.debug(f"PDF生成開始: {output_path}")
+    try:
+        result = html_to_pdf(driver, html_content, str(output_path))
+        if result:
+            logger.info(f"PDF生成成功: {output_path}")
+            return True
+        else:
+            error_msg = f"PDF生成失敗: html_to_pdf が False を返しました"
+            logger.error(error_msg)
+            return False
+    except Exception as e:
+        error_msg = f"PDF生成中に予期せぬエラー: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return False
 
 def merge_pdfs(pdf_files, output_path):
     """複数のPDFファイルを1つにマージし、連続したページ番号を付ける"""
