@@ -25,8 +25,8 @@ MarkdownファイルをPDFに変換するPythonアプリケーション
 
 1. **リポジトリをクローンまたはダウンロード**:
 ```bash
-git clone <repository-url>
-cd chrome-pdf-extension
+git clone https://github.com/k-brahma/md2pdf-python.git
+cd md2pdf-python
 ```
 
 2. **必要なパッケージをインストール**:
