@@ -1,0 +1,298 @@
+/* 基本スタイル */
+:root {
+    --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir, "Nimbus Sans L", Roboto, Noto, "Segoe UI", Arial, Helvetica, "Helvetica Neue", sans-serif;
+    --mono-font: Consolas, Menlo, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+    --bg: #fff;
+    --accent-bg: #f5f7ff;
+    --text: #212121;
+    --text-light: #585858;
+    --border: #d8dae1;
+    --accent: #0d47a1;
+    --code: #d81b60;
+    --preformatted: #444;
+    --marked: #ffdd33;
+    --disabled: #efefef;
+}
+
+html {
+    font-family: var(--sans-font);
+    font-size: 16px;
+}
+
+body {
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    display: grid;
+    grid-template-columns: 1fr min(45rem, 90%) 1fr;
+    margin: 0;
+}
+
+body > * {
+    grid-column: 2;
+}
+
+main {
+    padding-top: 1.5rem;
+}
+
+/* 見出しのスタイル */
+h1, h2, h3 {
+    line-height: 1.2;
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2.5em; }
+h2 { font-size: 2em; }
+h3 { font-size: 1.75em; }
+h4 { font-size: 1.5em; }
+h5 { font-size: 1.25em; }
+h6 { font-size: 1.1em; }
+
+/* 段落とテキスト */
+p {
+    margin-bottom: 1em;
+    line-height: 1.6;
+}
+
+/* コードブロックとシンタックスハイライト */
+pre {
+    padding: 1rem 1.4rem;
+    max-width: 100%;
+    overflow: auto;
+    background: var(--accent-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+pre code {
+    background: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--mono-font);
+}
+
+code {
+    font-family: var(--mono-font);
+    font-size: 0.9em;
+    padding: 0.2em 0.4em;
+    background: var(--accent-bg);
+    border-radius: 3px;
+}
+
+/* シンタックスハイライトのカスタマイズ */
+.hljs {
+    background: var(--accent-bg);
+    color: var(--text);
+    padding: 0;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+    color: #7b0052;
+    font-weight: bold;
+}
+
+.hljs-string,
+.hljs-doctag {
+    color: #008000;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+    color: #000080;
+    font-weight: bold;
+}
+
+.hljs-subst {
+    font-weight: normal;
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+    color: #458;
+    font-weight: bold;
+}
+
+.hljs-tag,
+.hljs-name,
+.hljs-attribute {
+    color: #000080;
+    font-weight: normal;
+}
+
+.hljs-regexp,
+.hljs-link {
+    color: #009926;
+}
+
+.hljs-symbol,
+.hljs-bullet {
+    color: #990073;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+    color: #0086b3;
+}
+
+.hljs-meta {
+    color: #999;
+    font-weight: bold;
+}
+
+.hljs-deletion {
+    background: #fdd;
+}
+
+.hljs-addition {
+    background: #dfd;
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: bold;
+}
+
+/* テーブル */
+table {
+    border-collapse: collapse;
+    display: block;
+    margin: 1.5rem 0;
+    overflow: auto;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid var(--border);
+    text-align: left;
+    padding: 0.5rem;
+}
+
+th {
+    background: var(--accent-bg);
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background: var(--accent-bg);
+}
+
+/* ブロッククォート */
+blockquote {
+    margin: 2rem 0 2rem 2rem;
+    padding: 0.4rem 0.8rem;
+    border-left: 0.35rem solid var(--accent);
+    font-style: italic;
+    color: var(--text-light);
+}
+
+/* PDF印刷用の調整 - 情報密度を{{'高く' if compact else '標準'}} */
+@media print {
+    body {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: {{margin}} !important;
+        grid-template-columns: 1fr !important;
+        font-size: {{base_font_size}}px !important;
+        line-height: {{1.2 if compact else 1.3}} !important;
+    }
+    body > * {
+        grid-column: 1 !important;
+    }
+    
+    /* 見出しのサイズを調整 */
+    h1 {
+        font-size: {{base_font_size + 6}}px !important;
+        margin-top: {{12 if compact else 16}}px !important;
+        margin-bottom: {{6 if compact else 8}}px !important;
+        page-break-after: avoid;
+    }
+    h2 {
+        font-size: {{base_font_size + 4}}px !important;
+        margin-top: {{10 if compact else 14}}px !important;
+        margin-bottom: {{4 if compact else 6}}px !important;
+        page-break-after: avoid;
+    }
+    h3 {
+        font-size: {{base_font_size + 2}}px !important;
+        margin-top: {{8 if compact else 12}}px !important;
+        margin-bottom: {{3 if compact else 4}}px !important;
+        page-break-after: avoid;
+    }
+    h4, h5, h6 {
+        font-size: {{base_font_size + 1}}px !important;
+        margin-top: {{6 if compact else 10}}px !important;
+        margin-bottom: {{3 if compact else 4}}px !important;
+        page-break-after: avoid;
+    }
+    
+    /* 段落のマージンを調整 */
+    p {
+        margin-bottom: {{4 if compact else 8}}px !important;
+        orphans: 3;
+        widows: 3;
+    }
+    
+    /* リストのマージンを調整 */
+    ul, ol {
+        margin-bottom: {{4 if compact else 8}}px !important;
+        padding-left: {{1.0 if compact else 1.2}}em !important;
+    }
+    li {
+        margin-bottom: {{1 if compact else 2}}px !important;
+    }
+    
+    /* コードブロックを調整 */
+    pre {
+        padding: {{6 if compact else 8}}px {{8 if compact else 12}}px !important;
+        margin-bottom: {{4 if compact else 8}}px !important;
+        font-size: {{base_font_size - 2}}px !important;
+        line-height: 1.2 !important;
+        page-break-inside: avoid;
+    }
+    
+    /* インラインコードを調整 */
+    code {
+        font-size: {{base_font_size - 2}}px !important;
+        padding: 1px {{2 if compact else 3}}px !important;
+    }
+    
+    /* テーブルを調整 */
+    table {
+        margin: {{4 if compact else 8}}px 0 !important;
+        font-size: {{base_font_size - 2}}px !important;
+        page-break-inside: avoid;
+    }
+    td, th {
+        padding: {{2 if compact else 4}}px {{4 if compact else 6}}px !important;
+    }
+    
+    /* ブロッククォートを調整 */
+    blockquote {
+        margin: {{4 if compact else 8}}px 0 {{4 if compact else 8}}px {{12 if compact else 16}}px !important;
+        padding: {{3 if compact else 4}}px {{6 if compact else 8}}px !important;
+        font-size: {{base_font_size - 1}}px !important;
+    }
+    
+    /* ページ分割の制御 */
+    .page-break {
+        page-break-before: always;
+    }
+    .no-break {
+        page-break-inside: avoid;
+    }
+    
+    /* フッターやヘッダー用のスペースを最小化 */
+    @page {
+        margin: {{margin}};
+    }
+} 
