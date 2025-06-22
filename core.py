@@ -163,17 +163,26 @@ def create_driver(headless=True):
     
     return webdriver.Chrome(service=service, options=options)
 
-def html_to_pdf(driver, html_content, pdf_path):
+def html_to_pdf(driver, html_content, pdf_path, source_dir=None):
     """HTMLをPDFに変換"""
     logger.debug(f"html_to_pdf開始: pdf_path={pdf_path}")
     
     try:
-        # 一時HTMLファイルを作成
+        # 一時HTMLファイルを作成（source_dirが指定されている場合はそこに作成）
         logger.debug("一時HTMLファイル作成開始")
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-            f.write(html_content)
-            temp_html_path = f.name
-        logger.debug(f"一時HTMLファイル作成完了: {temp_html_path}")
+        if source_dir and Path(source_dir).exists():
+            # 元のMarkdownファイルと同じディレクトリに一時ファイルを作成
+            # これにより相対パスの画像参照が正しく解決される
+            temp_html_path = Path(source_dir) / f"temp_{os.getpid()}_{id(html_content)}.html"
+            with open(temp_html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            logger.debug(f"一時HTMLファイル作成完了（元ディレクトリ内）: {temp_html_path}")
+        else:
+            # フォールバック：システムの一時ディレクトリを使用
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+                f.write(html_content)
+                temp_html_path = f.name
+            logger.debug(f"一時HTMLファイル作成完了（システムtemp）: {temp_html_path}")
         
         # HTMLを読み込み
         file_url = f"file://{os.path.abspath(temp_html_path)}"
@@ -240,7 +249,10 @@ def html_to_pdf(driver, html_content, pdf_path):
         if 'temp_html_path' in locals():
             try:
                 logger.debug(f"一時ファイル削除: {temp_html_path}")
-                os.unlink(temp_html_path)
+                if isinstance(temp_html_path, Path):
+                    temp_html_path.unlink(missing_ok=True)
+                else:
+                    os.unlink(temp_html_path)
                 logger.debug("一時ファイル削除完了")
             except Exception as e:
                 logger.warning(f"一時ファイル削除エラー: {str(e)}", exc_info=True)
@@ -349,7 +361,9 @@ def process_file(input_path, output_path, driver, css_files=None, compact=False,
     # PDF生成
     logger.debug(f"PDF生成開始: {output_path}")
     try:
-        result = html_to_pdf(driver, html_content, str(output_path))
+        # 元のMarkdownファイルのディレクトリを source_dir として渡す
+        source_dir = input_path.parent
+        result = html_to_pdf(driver, html_content, str(output_path), source_dir=str(source_dir))
         if result:
             logger.info(f"PDF生成成功: {output_path}")
             return True

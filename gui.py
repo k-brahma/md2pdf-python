@@ -54,7 +54,7 @@ class ConversionWorker(QThread):
     progress = Signal(str)
     finished = Signal(bool, str)  # 成功/失敗とエラーメッセージを送信
     
-    def __init__(self, input_path, output_path, css_files=None, compact=False, font_size=12, merge=False, merge_name=None, selected_files=None):
+    def __init__(self, input_path, output_path, css_files=None, compact=False, font_size=16, merge=False, merge_name=None, selected_files=None):
         super().__init__()
         self.input_path = input_path
         self.output_path = output_path
@@ -198,8 +198,8 @@ class MainWindow(QMainWindow):
         font_layout = QHBoxLayout()
         font_layout.addWidget(QLabel("フォントサイズ:"))
         self.font_size = QSpinBox()
-        self.font_size.setRange(8, 24)
-        self.font_size.setValue(12)
+        self.font_size.setRange(10, 36)
+        self.font_size.setValue(16)
         font_layout.addWidget(self.font_size)
         font_layout.addStretch()
         options_layout.addLayout(font_layout)
