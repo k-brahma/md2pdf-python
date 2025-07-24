@@ -11,6 +11,7 @@ from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
+    QComboBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -25,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core import create_driver, process_directory, process_file
+from core import create_driver, process_directory, process_file, get_preset_config
 
 # ロガーの設定
 logger = logging.getLogger(__name__)
@@ -54,11 +55,12 @@ class ConversionWorker(QThread):
     progress = Signal(str)
     finished = Signal(bool, str)  # 成功/失敗とエラーメッセージを送信
     
-    def __init__(self, input_path, output_path, css_files=None, compact=False, font_size=16, merge=False, merge_name=None, selected_files=None):
+    def __init__(self, input_path, output_path, css_files=None, template_file=None, compact=False, font_size=16, merge=False, merge_name=None, selected_files=None):
         super().__init__()
         self.input_path = input_path
         self.output_path = output_path
         self.css_files = css_files
+        self.template_file = template_file
         self.compact = compact
         self.font_size = font_size
         self.merge = merge
@@ -85,6 +87,7 @@ class ConversionWorker(QThread):
                 success = process_directory(
                     Path(self.input_path), self.output_path, self.driver,
                     css_files=self.css_files,
+                    template_file=self.template_file,
                     compact=self.compact,
                     font_size=self.font_size,
                     merge=self.merge,
@@ -96,6 +99,7 @@ class ConversionWorker(QThread):
                 success = process_directory(
                     self.input_path, self.output_path, self.driver,
                     css_files=self.css_files,
+                    template_file=self.template_file,
                     compact=self.compact,
                     font_size=self.font_size,
                     merge=self.merge,
@@ -106,6 +110,7 @@ class ConversionWorker(QThread):
                 success = process_file(
                     self.input_path, self.output_path, self.driver,
                     css_files=self.css_files,
+                    template_file=self.template_file,
                     compact=self.compact,
                     font_size=self.font_size
                 )
@@ -179,6 +184,20 @@ class MainWindow(QMainWindow):
         
         # オプション設定
         options_layout = QVBoxLayout()
+        
+        # プリセット選択
+        preset_layout = QHBoxLayout()
+        preset_layout.addWidget(QLabel("プリセット:"))
+        self.preset_combo = QComboBox()
+        self.preset_combo.addItem("なし", None)
+        self.preset_combo.addItem("デフォルト", "default")
+        self.preset_combo.addItem("ビジネス文書", "business")
+        self.preset_combo.addItem("シンプル", "simple")
+        self.preset_combo.setCurrentIndex(1)  # デフォルトを選択
+        self.preset_combo.currentTextChanged.connect(self.on_preset_changed)
+        preset_layout.addWidget(self.preset_combo)
+        preset_layout.addStretch()
+        options_layout.addLayout(preset_layout)
         
         # CSSファイル選択
         css_layout = QHBoxLayout()
@@ -280,6 +299,13 @@ class MainWindow(QMainWindow):
         if path:
             self.css_path.setText(path)
     
+    def on_preset_changed(self):
+        """プリセット選択が変更されたときの処理"""
+        preset = self.preset_combo.currentData()
+        if preset:
+            # プリセットが選択されたら、CSSフィールドをクリア（プリセットの設定を使用）
+            self.css_path.clear()
+    
     def start_conversion(self):
         """変換処理を開始"""
         input_path = Path(self.input_path.text())
@@ -307,11 +333,25 @@ class MainWindow(QMainWindow):
         self.progress_bar.setRange(0, 0)  # 不確定プログレスバー
         self.status_label.setText("変換中...")
         
+        # プリセット処理
+        css_files = None
+        template_file = None
+        
+        preset = self.preset_combo.currentData()
+        if preset:
+            preset_config = get_preset_config(preset)
+            css_files = preset_config['css_files']
+            template_file = preset_config['template_file']
+        elif self.css_path.text():
+            # プリセットが選択されていない場合は、手動で選択したCSSを使用
+            css_files = [self.css_path.text()]
+        
         # ワーカースレッドを作成して開始
         self.worker = ConversionWorker(
             input_path,
             output_path,
-            css_files=[self.css_path.text()] if self.css_path.text() else None,
+            css_files=css_files,
+            template_file=template_file,
             compact=self.compact_check.isChecked(),
             font_size=self.font_size.value(),
             merge=self.merge_check.isChecked(),

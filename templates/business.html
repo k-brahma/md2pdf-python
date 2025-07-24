@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Document</title>
+    <style>
+{{css_content}}
+    </style>
+</head>
+<body>
+    <!-- ヘッダーテキスト（PDF生成時の抽出用・非表示） -->
+    <div class="print-header" style="display: none;">{{header_text | default('', true)}}</div>
+    
+    <!-- メインコンテンツ -->
+    <main>
+        {{html_content}}
+        </main>
+</body>
+</html> 

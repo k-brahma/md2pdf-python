@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Document</title>
+    <style>
+/* 
+ * Business Document CSS
+ * 法人向け提案書・見積書用スタイルシート
+ */
+
+:root {
+    --sans-font: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo UI", "Arial", sans-serif;
+    --mono-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    --bg: #ffffff;
+    --text: #333333;
+    --text-light: #666666;
+    --text-muted: #999999;
+    --border: #e1e5e9;
+    --border-light: #f8f9fa;
+    --accent: #2c5282;
+    --accent-light: #4299e1;
+    --success: #38a169;
+    --warning: #d69e2e;
+    --danger: #e53e3e;
+    --table-header-bg: #f7fafc;
+    --table-stripe-bg: #f9f9f9;
+}
+
+/* 基本レイアウト */
+html {
+    font-family: var(--sans-font);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+body {
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 1rem 2rem 2rem 2rem;  /* 上部余白を2remから1remに削減 */
+    max-width: 800px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* 印刷対応 */
+@media print {
+    body {
+        padding: 1rem;
+        max-width: none;
+        margin: 0;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+    
+    h1, h2, h3 {
+        page-break-after: avoid;
+    }
+    
+    table {
+        page-break-inside: avoid;
+    }
+}
+
+/* 見出しスタイル */
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 2rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid var(--accent);
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem 0;
+    padding-bottom: 0.7rem;
+    border-bottom: 2px solid var(--border);
+}
+
+h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 2rem 0 0.8rem 0;
+    padding-left: 0.5rem;
+    padding-bottom: 0.3rem;
+    border-left: 4px solid var(--accent-light);
+}
+
+h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.5rem 0 0.5rem 0;
+}
+
+/* 段落とテキスト */
+p {
+    margin: 0 0 1rem 0;
+    text-align: justify;
+}
+
+strong {
+    font-weight: 700;
+    color: var(--text);
+}
+
+em {
+    font-style: italic;
+    color: var(--accent);
+}
+
+/* 水平線 */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, var(--border), var(--accent-light), var(--border));
+    margin: 2rem 0;
+}
+
+/* リスト */
+ul, ol {
+    margin: 0 0 1rem 0;
+    padding-left: 1.5rem;
+}
+
+li {
+    margin: 0.3rem 0;
+}
+
+/* テーブル（見積書の金額表など） */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 1.1rem;  /* 表のフォントサイズを少し大きく */
+}
+
+thead {
+    background: var(--table-header-bg);
+}
+
+th {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    padding: 1.5rem 1.2rem;  /* パディングを大幅拡大 */
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    line-height: 1.4;
+}
+
+td {
+    padding: 1.2rem 1rem;  /* パディングを大幅拡大 */
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+}
+
+tr:nth-child(even) {
+    background: var(--table-stripe-bg);
+}
+
+tr:hover {
+    background: var(--border-light);
+}
+
+/* 金額関連の強調 */
+table td:last-child,
+table th:last-child {
+    text-align: right;
+    font-weight: 600;
+}
+
+/* 合計行の特別スタイル */
+tr:has(strong),
+tr:last-child {
+    background: var(--table-header-bg);
+    font-weight: 700;
+}
+
+/* 重要な情報の強調ボックス */
+.info-box {
+    background: var(--border-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.warning-box {
+    background: #fef5e7;
+    border: 1px solid var(--warning);
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+/* 住所・連絡先情報 */
+.contact-info {
+    background: var(--border-light);
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+}
+
+/* 日付・番号情報 */
+.document-meta {
+    text-align: right;
+    margin: 1rem 0 2rem 0;
+    color: var(--text-light);
+}
+
+.document-meta strong {
+    color: var(--text);
+}
+
+/* コード・プリフォーマット */
+code {
+    font-family: var(--mono-font);
+    background: var(--border-light);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9rem;
+}
+
+pre {
+    font-family: var(--mono-font);
+    background: var(--border-light);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+/* 引用 */
+blockquote {
+    border-left: 4px solid var(--accent-light);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+/* フォーム要素（将来拡張用） */
+input, select, textarea {
+    font-family: inherit;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin: 0.2rem;
+}
+
+/* 印刷時のページ設定 */
+@page {
+    margin: 2cm;
+    size: A4;
+}
+
+/* 印刷用ヘッダー・フッター - 画面表示では非表示 */
+.print-header {
+    display: none;
+}
+
+.print-footer {
+    display: none;
+}
+
+/* 印刷時の調整 */
+@media print {
+    /* 印刷時の基本設定 - HTML表示と統一 */
+    body {
+        margin: 0;
+        padding: 1rem 2rem 120px 2rem;  /* 上部余白を2remから1remに削減 */
+        line-height: 1.6;               /* HTML表示時と同じ行間 */
+        font-size: 16px;                /* HTML表示時と同じフォントサイズ */
+        max-width: 800px;               /* HTML表示時と同じ幅制限 */
+        margin: 0 auto;                 /* 中央揃え */
+        box-sizing: border-box;
+    }
+    
+    /* メインコンテンツの調整 */
+    main {
+        margin-top: 0;
+        margin-bottom: 80px;
+        padding-top: 0;
+        padding-bottom: 60px;
+    }
+    
+    /* 最初のh1（見積書タイトル）を上詰め */
+    main > h1:first-child,
+    h1:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* 印刷時の見出し間隔 - HTML表示時の設定を維持 */
+    h1 {
+        font-size: 2.2rem !important;     /* HTML表示時と同じ */
+        margin: 0 0 2rem 0 !important;
+        padding-top: 0 !important;
+        color: #333 !important;           /* 印刷時用の色調整 */
+        border-bottom-color: #333 !important;
+    }
+    
+    h2 {
+        font-size: 1.5rem !important;     /* HTML表示時と同じ */
+        margin: 2.5rem 0 1rem 0 !important;
+        color: #333 !important;
+        border-bottom-color: #ccc !important;
+    }
+    
+    h3 {
+        font-size: 1.2rem !important;     /* HTML表示時と同じ */
+        margin: 2rem 0 0.8rem 0 !important;
+        color: #333 !important;
+        border-left-color: #666 !important;
+    }
+    
+    /* 最後の要素の余白 */
+    body > main > *:last-child,
+    main > *:last-child {
+        margin-bottom: 50px !important;
+        padding-bottom: 30px !important;
+    }
+    
+    /* ヘッダー・フッターは非表示（Chrome自体の機能を使用） */
+    .print-header,
+    .print-footer {
+        display: none !important;
+    }
+    
+    /* テーブルの印刷時調整 */
+    table {
+        box-shadow: none !important;              /* 印刷では影なし */
+        font-size: 1.1rem !important;            /* HTML表示時と同じ */
+    }
+    
+    th {
+        background: #f0f0f0 !important;          /* 印刷で濃い色は避ける */
+        color: #000 !important;
+        padding: 1.5rem 1.2rem !important;      /* HTML表示時と同じ */
+    }
+    
+    td {
+        padding: 1.2rem 1rem !important;        /* HTML表示時と同じ */
+    }
+    
+    tr:nth-child(even) {
+        background: #f9f9f9 !important;
+    }
+    
+    /* ページ番号 */
+    .page-number::after {
+        content: counter(page);
+    }
+    
+    /* ページ区切りの制御 */
+    .page-break-before {
+        page-break-before: always;
+        margin-top: 20px; /* ページ境界での余白確保 */
+    }
+    
+    .page-break-after {
+        page-break-after: always;
+        margin-bottom: 20px; /* ページ境界での余白確保 */
+    }
+    
+    .no-page-break {
+        page-break-inside: avoid;
+    }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+    
+    table {
+        font-size: 0.9rem;
+    }
+    
+    th, td {
+        padding: 0.5rem 0.4rem;
+    }
+} 
+/* 基本スタイル */
+:root {
+    --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir, "Nimbus Sans L", Roboto, Noto, "Segoe UI", Arial, Helvetica, "Helvetica Neue", sans-serif;
+    --mono-font: Consolas, Menlo, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+    --bg: #fff;
+    --accent-bg: #f5f7ff;
+    --text: #212121;
+    --text-light: #585858;
+    --border: #d8dae1;
+    --accent: #0d47a1;
+    --code: #d81b60;
+    --preformatted: #444;
+    --marked: #ffdd33;
+    --disabled: #efefef;
+}
+
+html {
+    font-family: var(--sans-font);
+    font-size: 16px;
+}
+
+body {
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    display: grid;
+    grid-template-columns: 1fr min(45rem, 90%) 1fr;
+    margin: 0;
+}
+
+body > * {
+    grid-column: 2;
+}
+
+main {
+    padding-top: 1.5rem;
+}
+
+/* 見出しのスタイル */
+h1, h2, h3 {
+    line-height: 1.2;
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2.5em; }
+h2 { font-size: 2em; }
+h3 { font-size: 1.75em; }
+h4 { font-size: 1.5em; }
+h5 { font-size: 1.25em; }
+h6 { font-size: 1.1em; }
+
+/* 段落とテキスト */
+p {
+    margin-bottom: 1em;
+    line-height: 1.6;
+}
+
+/* コードブロックとシンタックスハイライト */
+pre {
+    padding: 1rem 1.4rem;
+    max-width: 100%;
+    overflow: auto;
+    background: var(--accent-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+pre code {
+    background: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--mono-font);
+}
+
+code {
+    font-family: var(--mono-font);
+    font-size: 0.9em;
+    padding: 0.2em 0.4em;
+    background: var(--accent-bg);
+    border-radius: 3px;
+}
+
+/* シンタックスハイライトのカスタマイズ */
+.hljs {
+    background: var(--accent-bg);
+    color: var(--text);
+    padding: 0;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+    color: #7b0052;
+    font-weight: bold;
+}
+
+.hljs-string,
+.hljs-doctag {
+    color: #008000;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+    color: #000080;
+    font-weight: bold;
+}
+
+.hljs-subst {
+    font-weight: normal;
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+    color: #458;
+    font-weight: bold;
+}
+
+.hljs-tag,
+.hljs-name,
+.hljs-attribute {
+    color: #000080;
+    font-weight: normal;
+}
+
+.hljs-regexp,
+.hljs-link {
+    color: #009926;
+}
+
+.hljs-symbol,
+.hljs-bullet {
+    color: #990073;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+    color: #0086b3;
+}
+
+.hljs-meta {
+    color: #999;
+    font-weight: bold;
+}
+
+.hljs-deletion {
+    background: #fdd;
+}
+
+.hljs-addition {
+    background: #dfd;
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: bold;
+}
+
+/* テーブル */
+table {
+    border-collapse: collapse;
+    display: block;
+    margin: 1.5rem 0;
+    overflow: auto;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid var(--border);
+    text-align: left;
+    padding: 0.5rem;
+}
+
+th {
+    background: var(--accent-bg);
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background: var(--accent-bg);
+}
+
+/* ブロッククォート */
+blockquote {
+    margin: 2rem 0 2rem 2rem;
+    padding: 0.4rem 0.8rem;
+    border-left: 0.35rem solid var(--accent);
+    font-style: italic;
+    color: var(--text-light);
+}
+
+/* PDF印刷用の調整 - 情報密度を標準 */
+@media print {
+    body {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0.5in !important;
+        grid-template-columns: 1fr !important;
+        font-size: 16px !important;
+        line-height: 1.3 !important;
+    }
+    body > * {
+        grid-column: 1 !important;
+    }
+    
+    /* 見出しのサイズを調整 */
+    h1 {
+        font-size: 22px !important;
+        margin-top: 16px !important;
+        margin-bottom: 8px !important;
+        page-break-after: avoid;
+    }
+    h2 {
+        font-size: 20px !important;
+        margin-top: 14px !important;
+        margin-bottom: 6px !important;
+        page-break-after: avoid;
+    }
+    h3 {
+        font-size: 18px !important;
+        margin-top: 12px !important;
+        margin-bottom: 4px !important;
+        page-break-after: avoid;
+    }
+    h4, h5, h6 {
+        font-size: 17px !important;
+        margin-top: 10px !important;
+        margin-bottom: 4px !important;
+        page-break-after: avoid;
+    }
+    
+    /* 段落のマージンを調整 */
+    p {
+        margin-bottom: 8px !important;
+        orphans: 3;
+        widows: 3;
+    }
+    
+    /* リストのマージンを調整 */
+    ul, ol {
+        margin-bottom: 8px !important;
+        padding-left: 1.2em !important;
+    }
+    li {
+        margin-bottom: 2px !important;
+    }
+    
+    /* コードブロックを調整 */
+    pre {
+        padding: 8px 12px !important;
+        margin-bottom: 8px !important;
+        font-size: 14px !important;
+        line-height: 1.2 !important;
+        page-break-inside: avoid;
+    }
+    
+    /* インラインコードを調整 */
+    code {
+        font-size: 14px !important;
+        padding: 1px 3px !important;
+    }
+    
+    /* テーブルを調整 */
+    table {
+        margin: 8px 0 !important;
+        font-size: 14px !important;
+        page-break-inside: avoid;
+    }
+    td, th {
+        padding: 4px 6px !important;
+    }
+    
+    /* ブロッククォートを調整 */
+    blockquote {
+        margin: 8px 0 8px 16px !important;
+        padding: 4px 8px !important;
+        font-size: 15px !important;
+    }
+    
+    /* ページ分割の制御 */
+    .page-break {
+        page-break-before: always;
+    }
+    .no-break {
+        page-break-inside: avoid;
+    }
+    
+    /* フッターやヘッダー用のスペースを最小化 */
+    @page {
+        margin: 0.5in;
+    }
+} 
+    </style>
+</head>
+<body>
+    <!-- ヘッダーテキスト（PDF生成時の抽出用・非表示） -->
+    <div class="print-header" style="display: none;">見積書</div>
+    
+    <!-- メインコンテンツ -->
+    <main>
+        <h1 id="_1">ご提案・お見積書</h1>
+<p>園田・小林弁理士法人 藤 様<br />
+先日の打ち合わせに基づき、研修について以下のとおり提案いたします。</p>
+<hr />
+<h2 id="_2">研修概要</h2>
+<h3 id="_3">研修名</h3>
+<p><strong>生成AI（ChatGPT等）活用研修 ～業務効率化のための実践的アプローチ～</strong></p>
+<h3 id="_4">研修目的</h3>
+<ul>
+<li>生成AI技術の基礎理解と動作原理の習得</li>
+<li>ChatGPT、Microsoft Copilot等の実践的活用方法の習得</li>
+<li>業務効率化への具体的な応用手法の習得</li>
+<li>利用時のセキュリティ・規約上の注意点の理解</li>
+</ul>
+<h3 id="_5">対象者</h3>
+<p>事務方スタッフ 10名程度</p>
+<h3 id="_6">実施形式</h3>
+<ul>
+<li><strong>形式</strong>: 対面研修（御社への講師派遣）</li>
+<li><strong>期間</strong>: 全2回（各回3時間程度）</li>
+<li><strong>間隔</strong>: 第1回と第2回の間に2週間のインターバル</li>
+<li><strong>スタイル</strong>: ハンズオン形式（実習中心）</li>
+</ul>
+<hr />
+<h2 id="_7">研修内容概要(仮)</h2>
+<h3 id="1-3">第1回: 基礎理解と実践入門（3時間）</h3>
+<ul>
+<li>生成AI技術の基礎と動作原理</li>
+<li>生成AI技術の基本用語</li>
+<li>ChatGPT、Microsoft Copilot等の基本操作</li>
+<li>セキュリティ・利用規約の注意点</li>
+<li>基本的なプロンプト技術と実習</li>
+<li>事務・知財業務での活用事例</li>
+</ul>
+<h3 id="2-3">第2回: 実践応用と業務効率化（3時間）</h3>
+<ul>
+<li>Microsoft Copilotの効果的活用法（Office連携）</li>
+<li>業務効率化のための応用テクニック</li>
+<li>高度なプロンプト技術の実習</li>
+<li>トラブルシューティング・質疑応答</li>
+</ul>
+<hr />
+<h2 id="_8">提供物</h2>
+<ul>
+<li><strong>研修資料</strong>: PDF形式で事前提供（印刷は貴社にてお願いいたします）</li>
+<li><strong>実習用サンプルデータ</strong>: 電子データとして配布</li>
+<li><strong>参考資料</strong>: 技術的背景に関する動画・記事等のリンク集</li>
+</ul>
+<hr />
+<h2 id="_9">費用</h2>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>数量</th>
+<th>単価</th>
+<th>金額</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第1回研修（3時間）</td>
+<td>1回</td>
+<td>¥250,000</td>
+<td>¥250,000</td>
+</tr>
+<tr>
+<td>第2回研修（3時間）</td>
+<td>1回</td>
+<td>¥250,000</td>
+<td>¥250,000</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td></td>
+<td></td>
+<td><strong>¥500,000</strong></td>
+</tr>
+<tr>
+<td><strong>消費税（10%）</strong></td>
+<td></td>
+<td></td>
+<td><strong>¥50,000</strong></td>
+</tr>
+<tr>
+<td><strong>合計</strong></td>
+<td></td>
+<td></td>
+<td><strong>¥550,000</strong></td>
+</tr>
+</tbody>
+</table>
+<p>※ 研修資料の作成・提供費用を含みます<br />
+※ 近距離につき、交通費は不要です</p>
+<hr />
+<h2 id="_10">備考</h2>
+<ul>
+<li>研修日程については別途調整させていただきます</li>
+<li>研修後の簡単な質疑応答についてはサポートいたします</li>
+<li>研修内容は貴社のご要望に応じて柔軟に調整可能です</li>
+<li>本ご提案書・お見積書の有効期限は2025年8月24日といたします</li>
+</ul>
+<p><strong>ガラパゴスタディー有限会社 取締役 小川 慶一</strong><br />
+〒231-0004 神奈川県横浜市中区元浜町3-21-2 ヘリオス関内ビル4F ISO横浜内<br />
+TEL: 045-859-9823（受付時間: 平日9:00-18:00）</p>
+        </main>
+</body>
+</html> 

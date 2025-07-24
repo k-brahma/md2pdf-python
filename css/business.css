@@ -1,0 +1,400 @@
+/* 
+ * Business Document CSS
+ * 法人向け提案書・見積書用スタイルシート
+ */
+
+:root {
+    --sans-font: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo UI", "Arial", sans-serif;
+    --mono-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    --bg: #ffffff;
+    --text: #333333;
+    --text-light: #666666;
+    --text-muted: #999999;
+    --border: #e1e5e9;
+    --border-light: #f8f9fa;
+    --accent: #2c5282;
+    --accent-light: #4299e1;
+    --success: #38a169;
+    --warning: #d69e2e;
+    --danger: #e53e3e;
+    --table-header-bg: #f7fafc;
+    --table-stripe-bg: #f9f9f9;
+}
+
+/* 基本レイアウト */
+html {
+    font-family: var(--sans-font);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+body {
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 1rem 2rem 2rem 2rem;  /* 上部余白を2remから1remに削減 */
+    max-width: 800px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* 印刷対応 */
+@media print {
+    body {
+        padding: 1rem;
+        max-width: none;
+        margin: 0;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+    
+    h1, h2, h3 {
+        page-break-after: avoid;
+    }
+    
+    table {
+        page-break-inside: avoid;
+    }
+}
+
+/* 見出しスタイル */
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 2rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid var(--accent);
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem 0;
+    padding-bottom: 0.7rem;
+    border-bottom: 2px solid var(--border);
+}
+
+h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 2rem 0 0.8rem 0;
+    padding-left: 0.5rem;
+    padding-bottom: 0.3rem;
+    border-left: 4px solid var(--accent-light);
+}
+
+h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.5rem 0 0.5rem 0;
+}
+
+/* 段落とテキスト */
+p {
+    margin: 0 0 1rem 0;
+    text-align: justify;
+}
+
+strong {
+    font-weight: 700;
+    color: var(--text);
+}
+
+em {
+    font-style: italic;
+    color: var(--accent);
+}
+
+/* 水平線 */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, var(--border), var(--accent-light), var(--border));
+    margin: 2rem 0;
+}
+
+/* リスト */
+ul, ol {
+    margin: 0 0 1rem 0;
+    padding-left: 1.5rem;
+}
+
+li {
+    margin: 0.3rem 0;
+}
+
+/* テーブル（見積書の金額表など） */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 1.1rem;  /* 表のフォントサイズを少し大きく */
+}
+
+thead {
+    background: var(--table-header-bg);
+}
+
+th {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    padding: 1.5rem 1.2rem;  /* パディングを大幅拡大 */
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    line-height: 1.4;
+}
+
+td {
+    padding: 1.2rem 1rem;  /* パディングを大幅拡大 */
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+}
+
+tr:nth-child(even) {
+    background: var(--table-stripe-bg);
+}
+
+tr:hover {
+    background: var(--border-light);
+}
+
+/* 金額関連の強調 */
+table td:last-child,
+table th:last-child {
+    text-align: right;
+    font-weight: 600;
+}
+
+/* 合計行の特別スタイル */
+tr:has(strong),
+tr:last-child {
+    background: var(--table-header-bg);
+    font-weight: 700;
+}
+
+/* 重要な情報の強調ボックス */
+.info-box {
+    background: var(--border-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.warning-box {
+    background: #fef5e7;
+    border: 1px solid var(--warning);
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+/* 住所・連絡先情報 */
+.contact-info {
+    background: var(--border-light);
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+}
+
+/* 日付・番号情報 */
+.document-meta {
+    text-align: right;
+    margin: 1rem 0 2rem 0;
+    color: var(--text-light);
+}
+
+.document-meta strong {
+    color: var(--text);
+}
+
+/* コード・プリフォーマット */
+code {
+    font-family: var(--mono-font);
+    background: var(--border-light);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9rem;
+}
+
+pre {
+    font-family: var(--mono-font);
+    background: var(--border-light);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+/* 引用 */
+blockquote {
+    border-left: 4px solid var(--accent-light);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+/* フォーム要素（将来拡張用） */
+input, select, textarea {
+    font-family: inherit;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin: 0.2rem;
+}
+
+/* 印刷時のページ設定 */
+@page {
+    margin: 2cm;
+    size: A4;
+}
+
+/* 印刷用ヘッダー・フッター - 画面表示では非表示 */
+.print-header {
+    display: none;
+}
+
+.print-footer {
+    display: none;
+}
+
+/* 印刷時の調整 */
+@media print {
+    /* 印刷時の基本設定 - HTML表示と統一 */
+    body {
+        margin: 0;
+        padding: 1rem 2rem 120px 2rem;  /* 上部余白を2remから1remに削減 */
+        line-height: 1.6;               /* HTML表示時と同じ行間 */
+        font-size: 16px;                /* HTML表示時と同じフォントサイズ */
+        max-width: 800px;               /* HTML表示時と同じ幅制限 */
+        margin: 0 auto;                 /* 中央揃え */
+        box-sizing: border-box;
+    }
+    
+    /* メインコンテンツの調整 */
+    main {
+        margin-top: 0;
+        margin-bottom: 80px;
+        padding-top: 0;
+        padding-bottom: 60px;
+    }
+    
+    /* 最初のh1（見積書タイトル）を上詰め */
+    main > h1:first-child,
+    h1:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* 印刷時の見出し間隔 - HTML表示時の設定を維持 */
+    h1 {
+        font-size: 2.2rem !important;     /* HTML表示時と同じ */
+        margin: 0 0 2rem 0 !important;
+        padding-top: 0 !important;
+        color: #333 !important;           /* 印刷時用の色調整 */
+        border-bottom-color: #333 !important;
+    }
+    
+    h2 {
+        font-size: 1.5rem !important;     /* HTML表示時と同じ */
+        margin: 2.5rem 0 1rem 0 !important;
+        color: #333 !important;
+        border-bottom-color: #ccc !important;
+    }
+    
+    h3 {
+        font-size: 1.2rem !important;     /* HTML表示時と同じ */
+        margin: 2rem 0 0.8rem 0 !important;
+        color: #333 !important;
+        border-left-color: #666 !important;
+    }
+    
+    /* 最後の要素の余白 */
+    body > main > *:last-child,
+    main > *:last-child {
+        margin-bottom: 50px !important;
+        padding-bottom: 30px !important;
+    }
+    
+    /* ヘッダー・フッターは非表示（Chrome自体の機能を使用） */
+    .print-header,
+    .print-footer {
+        display: none !important;
+    }
+    
+    /* テーブルの印刷時調整 */
+    table {
+        box-shadow: none !important;              /* 印刷では影なし */
+        font-size: 1.1rem !important;            /* HTML表示時と同じ */
+    }
+    
+    th {
+        background: #f0f0f0 !important;          /* 印刷で濃い色は避ける */
+        color: #000 !important;
+        padding: 1.5rem 1.2rem !important;      /* HTML表示時と同じ */
+    }
+    
+    td {
+        padding: 1.2rem 1rem !important;        /* HTML表示時と同じ */
+    }
+    
+    tr:nth-child(even) {
+        background: #f9f9f9 !important;
+    }
+    
+    /* ページ番号 */
+    .page-number::after {
+        content: counter(page);
+    }
+    
+    /* ページ区切りの制御 */
+    .page-break-before {
+        page-break-before: always;
+        margin-top: 20px; /* ページ境界での余白確保 */
+    }
+    
+    .page-break-after {
+        page-break-after: always;
+        margin-bottom: 20px; /* ページ境界での余白確保 */
+    }
+    
+    .no-page-break {
+        page-break-inside: avoid;
+    }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+    
+    table {
+        font-size: 0.9rem;
+    }
+    
+    th, td {
+        padding: 0.5rem 0.4rem;
+    }
+} 

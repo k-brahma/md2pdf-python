@@ -8,7 +8,7 @@ import logging
 import sys
 from pathlib import Path
 
-from core import create_driver, process_directory, process_file
+from core import create_driver, process_directory, process_file, get_preset_config
 
 # ロガーの設定
 logger = logging.getLogger(__name__)
@@ -31,6 +31,8 @@ def main():
     parser.add_argument('output', nargs='?', help='Output PDF file path or directory (optional)')
     parser.add_argument('--no-headless', action='store_true', help='Run in non-headless mode')
     parser.add_argument('--css', nargs='+', help='CSS files to apply (e.g., --css simple.css prism.css)')
+    parser.add_argument('--preset', choices=['default', 'business', 'simple'], 
+                      help='Use predefined CSS and template combinations')
     parser.add_argument('--compact', action='store_true', help='Use compact layout for more content per page')
     parser.add_argument('--font-size', type=int, default=16, help='Base font size for PDF (default: 16px)')
     parser.add_argument('-d', '--directory', action='store_true', help='Process all Markdown files in the input directory')
@@ -60,6 +62,16 @@ def main():
             output_path = input_path.with_suffix('.pdf')
     
     # WebDriverを起動
+    # プリセットの処理
+    css_files = args.css
+    template_file = None
+    
+    if args.preset:
+        preset_config = get_preset_config(args.preset)
+        if not css_files:  # CSSが指定されていない場合のみプリセットのCSSを使用
+            css_files = preset_config['css_files']
+        template_file = preset_config['template_file']
+    
     driver = None
     try:
         driver = create_driver(not args.no_headless)
@@ -74,7 +86,8 @@ def main():
             logger.info(f"Found {len(selected_files)} Markdown files to process")
             success = process_directory(
                 input_path, output_path, driver,
-                css_files=args.css,
+                css_files=css_files,
+                template_file=template_file,
                 compact=args.compact,
                 font_size=args.font_size,
                 merge=args.merge,
@@ -96,7 +109,8 @@ def main():
             
             success = process_file(
                 input_path, output_path, driver,
-                css_files=args.css,
+                css_files=css_files,
+                template_file=template_file,
                 compact=args.compact,
                 font_size=args.font_size
             )
