@@ -1,17 +1,19 @@
 """
-Markdown to HTML conversion functionality
+Markdown to HTML conversion functionality using markdown-it-py
 """
 
-import markdown
+from markdown_it import MarkdownIt
+from mdit_py_plugins.front_matter import front_matter_plugin
+from mdit_py_plugins.footnote import footnote_plugin
 from jinja2 import Template
-from markdown.extensions import codehilite, fenced_code, tables, toc
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import HtmlFormatter
+from pygments.util import ClassNotFound
 
 from config.config import (
-    CODEHILITE_CONFIG,
     DEFAULT_CSS,
     DEFAULT_HTML_TEMPLATE,
-    MARKDOWN_EXTENSIONS,
-    PDF_CONFIG,
     load_css_file,
 )
 from .logger import logger
@@ -27,25 +29,59 @@ def load_template_file(file_path):
         return ""
 
 
+def highlight_code(code, lang=None, attrs=None):
+    """コードのシンタックスハイライト"""
+    if not lang:
+        return f'<pre><code>{code}</code></pre>'
+    
+    try:
+        lexer = get_lexer_by_name(lang, stripall=True)
+        formatter = HtmlFormatter(
+            noclasses=True,
+            style='default',
+            cssclass='highlight'
+        )
+        highlighted = highlight(code, lexer, formatter)
+        return highlighted
+    except ClassNotFound:
+        return f'<pre><code class="language-{lang}">{code}</code></pre>'
+
+
 def markdown_to_html(md_content, css_files=None, template_file=None, compact=False, font_size=16):
-    """MarkdownをHTMLに変換"""
-    # Markdown拡張機能の設定
-    extensions = ['tables', 'codehilite', 'fenced_code', 'toc']
-    logger.debug(f"Using extensions: {extensions}")
+    """MarkdownをHTMLに変換（markdown-it-py使用）"""
     
-    # 拡張機能の設定
-    extension_configs = {
-        'codehilite': {
-            'use_pygments': True,
-            'noclasses': True,
-            'pygments_style': 'default',
-            'linenums': False,
-            'guess_lang': True
-        }
-    }
+    # markdown-it-pyの設定
+    md = (
+        MarkdownIt("commonmark", {
+            "breaks": True,        # 改行を<br>に変換
+            "html": True,         # HTMLタグを許可
+            "linkify": True,      # URL自動リンク化
+            "typographer": True   # 引用符等の自動変換
+        })
+        .use(front_matter_plugin)
+        .use(footnote_plugin)
+        .enable([
+            'table',          # テーブル
+            'strikethrough',  # 打ち消し線
+        ])
+    )
     
-    md = markdown.Markdown(extensions=extensions, extension_configs=extension_configs)
-    html_content = md.convert(md_content)
+    # コードハイライト用のレンダラー設定
+    def render_code_block(self, tokens, idx, options, env, renderer):
+        token = tokens[idx]
+        info = token.info.strip() if token.info else ""
+        lang = info.split()[0] if info else None
+        
+        return highlight_code(token.content, lang)
+    
+    # レンダラーのオーバーライド
+    md.renderer.rules["code_block"] = render_code_block
+    md.renderer.rules["fence"] = render_code_block
+    
+    # HTML変換実行
+    html_content = md.render(md_content)
+    
+    logger.debug(f"markdown-it-pyでHTML変換完了")
     
     # CSSファイルを読み込み
     css_content = ""
