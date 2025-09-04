@@ -67,7 +67,7 @@ def markdown_to_html(md_content, css_files=None, template_file=None, compact=Fal
     )
     
     # コードハイライト用のレンダラー設定
-    def render_code_block(self, tokens, idx, options, env, renderer):
+    def render_code_block(tokens, idx, options, env):
         token = tokens[idx]
         info = token.info.strip() if token.info else ""
         lang = info.split()[0] if info else None

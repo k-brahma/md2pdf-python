@@ -62,3 +62,6 @@ result/
 
 # log files
 *.log
+
+# Claude settings
+.claude/settings.local.json
