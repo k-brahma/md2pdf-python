@@ -111,9 +111,10 @@ tr:nth-child(even) {
 }
 
 blockquote {
-    margin: 2rem 0 2rem 2rem;
-    padding: .4rem .8rem;
-    border-left: .35rem solid var(--accent);
-    font-style: italic;
-    color: var(--text-light);
+    margin: 1rem 0;
+    padding: .8rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-bg);
+    color: var(--text);
 } 

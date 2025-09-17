@@ -188,11 +188,12 @@ tr:nth-child(even) {
 
 /* ブロッククォート */
 blockquote {
-    margin: 2rem 0 2rem 2rem;
-    padding: 0.4rem 0.8rem;
-    border-left: 0.35rem solid var(--accent);
-    font-style: italic;
-    color: var(--text-light);
+    margin: 1rem 0;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-bg);
+    color: var(--text);
 }
 
 /* PDF印刷用の調整 - 情報密度を{{'高く' if compact else '標準'}} */
@@ -278,9 +279,9 @@ blockquote {
     
     /* ブロッククォートを調整 */
     blockquote {
-        margin: {{4 if compact else 8}}px 0 {{4 if compact else 8}}px {{12 if compact else 16}}px !important;
-        padding: {{3 if compact else 4}}px {{6 if compact else 8}}px !important;
-        font-size: {{base_font_size - 1}}px !important;
+        margin: {{6 if compact else 10}}px 0 !important;
+        padding: {{6 if compact else 8}}px {{8 if compact else 10}}px !important;
+        font-size: {{base_font_size}}px !important;
     }
     
     /* ページ分割の制御 */
