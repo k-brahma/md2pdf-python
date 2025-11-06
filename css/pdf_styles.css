@@ -196,6 +196,14 @@ blockquote {
     color: var(--text);
 }
 
+/* 画像のサイズ制御 */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em auto;
+}
+
 /* PDF印刷用の調整 - 情報密度を{{'高く' if compact else '標準'}} */
 @media print {
     body {
@@ -283,7 +291,16 @@ blockquote {
         padding: {{6 if compact else 8}}px {{8 if compact else 10}}px !important;
         font-size: {{base_font_size}}px !important;
     }
-    
+
+    /* 画像のサイズ制御（PDF印刷時） */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        margin: {{6 if compact else 10}}px auto !important;
+        page-break-inside: avoid;
+    }
+
     /* ページ分割の制御 */
     .page-break {
         page-break-before: always;
