@@ -4,26 +4,11 @@ Markdown to PDF converter CLI interface
 """
 
 import argparse
-import logging
 import sys
 from pathlib import Path
 
 from core import create_driver, process_directory, process_file, get_preset_config
-
-# ロガーの設定
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-# コンソールハンドラの設定
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-
-# フォーマッタの設定
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
-
-# ハンドラの追加
-logger.addHandler(console_handler)
+from core.logger import logger
 
 def main():
     parser = argparse.ArgumentParser(description='Convert Markdown to PDF (Pure Python approach)')

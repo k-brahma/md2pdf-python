@@ -2,7 +2,12 @@
 File and directory processing functionality
 """
 
+import os
+import time
+import uuid
 from pathlib import Path
+
+from PyPDF2 import PdfReader
 
 from .converter import markdown_to_html
 from .logger import logger
@@ -11,7 +16,9 @@ from .pdf import html_to_pdf, merge_pdfs
 
 def process_file(input_path, output_path, driver, css_files=None, template_file=None, compact=False, font_size=16):
     """個別のファイルを処理する関数"""
-    logger.info(f"Converting: {input_path} -> {output_path}")
+    started_at = time.monotonic()
+    input_path = Path(input_path).resolve()
+    logger.info("START input=%s output=%s", input_path, Path(output_path).resolve())
     
     # ファイル存在確認
     if not input_path.exists():
@@ -62,23 +69,68 @@ def process_file(input_path, output_path, driver, css_files=None, template_file=
             logger.error(error_msg, exc_info=True)
             return False
     
-    # PDF生成
-    logger.debug(f"PDF生成開始: {output_path}")
+    # 同じディレクトリの一時ファイルへ生成し、成功後に既存PDFと置き換える。
+    # 変換に失敗しても、以前のPDFは失われない。
+    temp_pdf_path = output_path.with_name(
+        f".{output_path.stem}.{uuid.uuid4().hex}.tmp.pdf"
+    )
+    logger.debug("PDF生成開始: temporary=%s final=%s", temp_pdf_path, output_path)
     try:
         # 元のMarkdownファイルのディレクトリを source_dir として渡す
         source_dir = input_path.parent
-        result = html_to_pdf(driver, html_content, str(output_path), source_dir=str(source_dir))
-        if result:
-            logger.info(f"PDF生成成功: {output_path}")
-            return True
-        else:
-            error_msg = f"PDF生成失敗: html_to_pdf が False を返しました"
-            logger.error(error_msg)
+        result = html_to_pdf(
+            driver,
+            html_content,
+            str(temp_pdf_path),
+            source_dir=str(source_dir),
+        )
+        if not result:
+            logger.error("PDF生成失敗: html_to_pdf が False を返しました input=%s", input_path)
             return False
+
+        if not temp_pdf_path.exists() or temp_pdf_path.stat().st_size == 0:
+            logger.error("PDF検証失敗: 一時PDFが存在しないか空です: %s", temp_pdf_path)
+            return False
+
+        try:
+            page_count = len(PdfReader(temp_pdf_path).pages)
+        except Exception:
+            logger.error("PDF検証失敗: PDFを読み込めません: %s", temp_pdf_path, exc_info=True)
+            return False
+
+        if page_count == 0:
+            logger.error("PDF検証失敗: ページがありません: %s", temp_pdf_path)
+            return False
+
+        os.replace(temp_pdf_path, output_path)
+        elapsed = time.monotonic() - started_at
+        logger.info(
+            "SUCCESS input=%s output=%s pages=%d size=%d elapsed=%.2fs",
+            input_path,
+            output_path.resolve(),
+            page_count,
+            output_path.stat().st_size,
+            elapsed,
+        )
+        return True
     except Exception as e:
-        error_msg = f"PDF生成中に予期せぬエラー: {str(e)}"
-        logger.error(error_msg, exc_info=True)
+        elapsed = time.monotonic() - started_at
+        logger.error(
+            "FAILED input=%s output=%s elapsed=%.2fs error=%s",
+            input_path,
+            output_path.resolve(),
+            elapsed,
+            e,
+            exc_info=True,
+        )
         return False
+    finally:
+        if temp_pdf_path.exists():
+            try:
+                temp_pdf_path.unlink()
+                logger.debug("一時PDFを削除: %s", temp_pdf_path)
+            except Exception:
+                logger.warning("一時PDFを削除できません: %s", temp_pdf_path, exc_info=True)
 
 
 def process_directory(input_dir, output_dir, driver, css_files=None, template_file=None, compact=False, font_size=16, merge=False, merge_name=None, selected_files=None):
@@ -98,6 +150,7 @@ def process_directory(input_dir, output_dir, driver, css_files=None, template_fi
     
     success_count = 0
     generated_pdfs = []
+    failed_files = []
     for md_file in md_files:
         # 出力パスを相対パスで計算
         rel_path = md_file.relative_to(input_dir)
@@ -107,8 +160,14 @@ def process_directory(input_dir, output_dir, driver, css_files=None, template_fi
         if process_file(md_file, pdf_path, driver, css_files, template_file, compact, font_size):
             success_count += 1
             generated_pdfs.append(pdf_path)
+        else:
+            failed_files.append(md_file)
     
     logger.info(f"\nConversion completed: {success_count}/{len(md_files)} files converted successfully")
+    if failed_files:
+        logger.error("変換失敗ファイル (%d件):", len(failed_files))
+        for failed_file in failed_files:
+            logger.error("  - %s", failed_file.resolve())
     
     # PDFのマージ処理
     if merge and success_count > 0:

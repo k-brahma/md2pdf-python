@@ -62,6 +62,10 @@ result/
 
 # log files
 *.log
+logs/
+
+# Temporary PDF files created before atomic replacement
+.*.tmp.pdf
 
 # Claude settings
 .claude/settings.local.json

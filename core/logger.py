@@ -1,23 +1,45 @@
-"""
-Logger configuration for the core package
-"""
+"""Application-wide logging configuration."""
 
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-# ロガーの設定
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
-# ファイルハンドラの設定（gui.pyと同じファイルに出力）
-log_file = Path('pdf_converter.log')
-file_handler = logging.FileHandler(log_file, encoding='utf-8')
-file_handler.setLevel(logging.DEBUG)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+LOG_DIR = PROJECT_ROOT / "logs"
+LOG_FILE = LOG_DIR / "pdf_converter.log"
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 
-# フォーマッタの設定
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
 
-# ハンドラの追加（重複を避けるために既存のハンドラを確認）
-if not logger.handlers:
-    logger.addHandler(file_handler)
+def configure_logger():
+    """Return the shared logger, configured once per process."""
+    app_logger = logging.getLogger("md2pdf")
+    app_logger.setLevel(logging.DEBUG)
+    app_logger.propagate = False
+
+    if app_logger.handlers:
+        return app_logger
+
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    formatter = logging.Formatter(LOG_FORMAT)
+
+    file_handler = RotatingFileHandler(
+        LOG_FILE,
+        maxBytes=5 * 1024 * 1024,
+        backupCount=5,
+        encoding="utf-8",
+    )
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+    app_logger.addHandler(file_handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+    app_logger.addHandler(console_handler)
+
+    app_logger.debug("Logger initialized: %s", LOG_FILE)
+    return app_logger
+
+
+logger = configure_logger()

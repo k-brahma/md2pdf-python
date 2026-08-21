@@ -7,7 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -27,28 +27,27 @@ from PySide6.QtWidgets import (
 )
 
 from core import create_driver, process_directory, process_file, get_preset_config
+from core.logger import LOG_FILE, logger
 
-# ロガーの設定
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
-# ファイルハンドラの設定
-log_file = Path('pdf_converter.log')
-file_handler = logging.FileHandler(log_file, encoding='utf-8')
-file_handler.setLevel(logging.DEBUG)
+class LogEmitter(QObject):
+    """LoggingメッセージをGUIスレッドへ渡す。"""
 
-# コンソールハンドラの設定
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+    message = Signal(str)
 
-# フォーマッタの設定
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
 
-# ハンドラの追加
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
+class GuiLogHandler(logging.Handler):
+    """ワーカースレッドのログをQt Signal経由でGUIへ表示する。"""
+
+    def __init__(self):
+        super().__init__()
+        self.emitter = LogEmitter()
+
+    def emit(self, record):
+        try:
+            self.emitter.message.emit(self.format(record))
+        except Exception:
+            self.handleError(record)
 
 class ConversionWorker(QThread):
     """変換処理を別スレッドで実行するためのワーカークラス"""
@@ -255,6 +254,15 @@ class MainWindow(QMainWindow):
         self.log_area.setReadOnly(True)
         self.log_area.setMaximumHeight(150)
         layout.addWidget(self.log_area)
+
+        self.gui_log_handler = GuiLogHandler()
+        self.gui_log_handler.setLevel(logging.INFO)
+        self.gui_log_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
+        self.gui_log_handler.emitter.message.connect(self.log_area.append)
+        logger.addHandler(self.gui_log_handler)
+        self.log_area.append(f"ログファイル: {LOG_FILE}")
         
         # 余白を追加
         layout.addStretch()
@@ -389,6 +397,11 @@ class MainWindow(QMainWindow):
         if state == Qt.CheckState.Checked.value:
             self.merge_name.setFocus()
 
+    def closeEvent(self, event):
+        """GUI用ログハンドラを外してから終了する。"""
+        logger.removeHandler(self.gui_log_handler)
+        super().closeEvent(event)
+
 
 def main():
     app = QApplication(sys.argv)
@@ -398,4 +411,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main() 
+    main()
