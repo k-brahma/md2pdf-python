@@ -1,0 +1,87 @@
+/*
+ * CV / Resume CSS
+ * 職務経歴書・履歴書など、本文が詰まった業務文書向けの印刷調整
+ *
+ * business.css の後に読み込む:
+ *   python main.py resume.md --preset cv
+ *   python main.py resume.md --css css/business.css css/cv.css
+ *
+ * 目的:
+ *   - 見出しやカテゴリラベルがページ末尾で孤立しないようにする
+ *   - 段落の途中でページが割れないようにする
+ *   - business.css が提案書向けに確保している余白を詰め、ページ数を抑える
+ *
+ * フォントサイズは --font-size で指定する。この CSS では固定しない。
+ * 特定の文書を N ページに収めるための微調整は、この CSS ではなく
+ * 文書側で別 CSS を追加して重ねること。
+ */
+
+/* 見出しを直後の内容と同じページに保つ */
+h2, h3 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+}
+
+/* 見出し直後の段落を break-inside: avoid で守る指定は入れない。
+ * 導入段落が長いと、見出しと段落がまとめて次ページへ送られ、
+ * 前ページの下半分が空くため。孤立行は下の orphans / widows で防ぐ。 */
+
+/* strong だけの段落はカテゴリラベルとみなし、直後のリストと同じページに保つ
+ * 例: **言語** の次に箇条書きが続くスキル一覧 */
+p:has(> strong:only-child) {
+    break-after: avoid-page;
+    page-break-after: avoid;
+}
+
+/* 行の孤立防止 */
+p, li {
+    orphans: 3;
+    widows: 3;
+}
+
+@media print {
+    body {
+        line-height: 1.4 !important;
+    }
+
+    h1 {
+        margin: 0 0 1rem 0 !important;
+    }
+
+    h2 {
+        margin: 1.4rem 0 0.6rem 0 !important;
+        padding-bottom: 0.35rem !important;
+    }
+
+    h3 {
+        margin: 1.1rem 0 0.45rem 0 !important;
+    }
+
+    p {
+        margin: 0 0 0.5rem 0 !important;
+    }
+
+    ul, ol {
+        margin: 0 0 0.5rem 0 !important;
+    }
+
+    li {
+        margin: 0.1rem 0 !important;
+    }
+
+    /* business.css が印刷時に main 下部へ確保する余白を解除する。
+     * 残しておくと最終ページの末尾 1〜2 行が次ページへ送られる。 */
+    body {
+        padding-bottom: 0 !important;
+    }
+
+    main {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    main > *:last-child {
+        margin-bottom: 10px !important;
+        padding-bottom: 0 !important;
+    }
+}

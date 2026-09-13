@@ -15,6 +15,14 @@ PRESETS = {
     'simple': {
         'css_files': ['css/simple.css'],
         'template_file': None
+    },
+    'cv': {
+        'css_files': ['css/business.css', 'css/cv.css'],
+        'template_file': 'templates/business.html'
+    },
+    'letter': {
+        'css_files': ['css/business.css', 'css/letter.css'],
+        'template_file': 'templates/business.html'
     }
 }
 

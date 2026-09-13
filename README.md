@@ -103,6 +103,7 @@ GUIでは以下の操作が可能です：
 | `-m, --merge` | 生成されたPDFを1つのファイルにマージ |
 | `-n, --name` | マージされたPDFファイルの名前（-mオプション使用時必須） |
 | `--css` | 適用するCSSファイル（複数指定可能） |
+| `--preset` | CSSとテンプレートの組み合わせを名前で指定（`default` / `business` / `simple` / `cv` / `letter`）。`--css` を併用した場合は CSS は `--css` が優先される |
 | `--compact` | より多くのコンテンツを1ページに収めるコンパクトレイアウト |
 | `--font-size` | PDFの基本フォントサイズ（デフォルト: 16px） |
 | `--no-headless` | ブラウザを表示モードで実行（デバッグ用） |
@@ -120,12 +121,21 @@ python main.py README.md
 python main.py document.md --css css/simple.css --font-size 14
 ```
 
-### 3. プロジェクト全体の変換とマージ
+### 3. 職務経歴書・カバーレターの変換
+```bash
+# 職務経歴書: 見出しの孤立防止と余白圧縮を business スタイルに重ねる
+python main.py resume.md --preset cv --font-size 14
+
+# カバーレター: A4 1ページの手紙向け
+python main.py cover-letter.md --preset letter --font-size 14
+```
+
+### 4. プロジェクト全体の変換とマージ
 ```bash
 python main.py -d docs/ -m -n project_documentation --compact
 ```
 
-### 4. GUI での使用
+### 5. GUI での使用
 ```bash
 python gui.py
 # → GUIが起動し、ファイル選択から変換まで視覚的に操作可能
@@ -145,9 +155,13 @@ python gui.py
 │   ├── simple.css       # シンプルなスタイル
 │   ├── prism.css        # コードハイライト用
 │   ├── default.css      # デフォルトスタイル
+│   ├── business.css     # ビジネス文書スタイル（提案書・見積書向け）
+│   ├── cv.css           # 職務経歴書向け調整（business.css に重ねる）
+│   ├── letter.css       # カバーレター向け調整（business.css に重ねる）
 │   └── pdf_styles.css   # PDF専用スタイル
 └── templates/           # HTMLテンプレート
-    └── default.html     # デフォルトHTMLテンプレート
+    ├── default.html     # デフォルトHTMLテンプレート
+    └── business.html    # ビジネス文書用テンプレート（business / cv / letter プリセット）
 ```
 
 ## カスタマイズ

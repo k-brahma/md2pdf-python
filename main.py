@@ -16,7 +16,7 @@ def main():
     parser.add_argument('output', nargs='?', help='Output PDF file path or directory (optional)')
     parser.add_argument('--no-headless', action='store_true', help='Run in non-headless mode')
     parser.add_argument('--css', nargs='+', help='CSS files to apply (e.g., --css simple.css prism.css)')
-    parser.add_argument('--preset', choices=['default', 'business', 'simple'], 
+    parser.add_argument('--preset', choices=['default', 'business', 'simple', 'cv', 'letter'], 
                       help='Use predefined CSS and template combinations')
     parser.add_argument('--compact', action='store_true', help='Use compact layout for more content per page')
     parser.add_argument('--font-size', type=int, default=16, help='Base font size for PDF (default: 16px)')

@@ -192,6 +192,8 @@ class MainWindow(QMainWindow):
         self.preset_combo.addItem("デフォルト", "default")
         self.preset_combo.addItem("ビジネス文書", "business")
         self.preset_combo.addItem("シンプル", "simple")
+        self.preset_combo.addItem("職務経歴書", "cv")
+        self.preset_combo.addItem("カバーレター", "letter")
         self.preset_combo.setCurrentIndex(1)  # デフォルトを選択
         self.preset_combo.currentTextChanged.connect(self.on_preset_changed)
         preset_layout.addWidget(self.preset_combo)
